@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:quiz_app/model/model.dart';
 import 'dart:convert';
+
 class QuizScreen extends StatefulWidget {
   const QuizScreen(String s, {Key? key}) : super(key: key);
 
@@ -12,6 +14,7 @@ class _QuizScreenState extends State<QuizScreen> {
   int _currentQuestionIndex = 0;
   int _score = 0;
 
+  final ValueNotifier<bool> _isDataFetched = ValueNotifier(false);
   late List<questions> _quizData;
 
   @override
@@ -20,14 +23,23 @@ class _QuizScreenState extends State<QuizScreen> {
     _loadQuizData();
   }
 
+  Future<String> _loadAsset() async {
+    String quizString = await rootBundle.loadString('assets/quiz.json');
+    _isDataFetched.value = true;
+    return quizString;
+  }
+
   void _loadQuizData() async {
-    final jsonString = await DefaultAssetBundle.of(context).loadString('assets/quiz_data.json');
+    String jsonString = await _loadAsset();
     final List<dynamic> jsonList = json.decode(jsonString);
     _quizData = jsonList.map((json) => questions.fromJson(json)).toList();
     setState(() {});
   }
 
   void _checkAnswer(String chosenAnswer) {
+    print("Correct answer: ${_quizData[_currentQuestionIndex]}");
+    print("Chosen answer: $chosenAnswer");
+
     if (_quizData[_currentQuestionIndex].answer == chosenAnswer) {
       setState(() {
         _score++;
@@ -39,31 +51,109 @@ class _QuizScreenState extends State<QuizScreen> {
       setState(() {
         _currentQuestionIndex++;
       });
-    } else {
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_quizData == null) {
-      return CircularProgressIndicator();
-    }
-
+    print('QuizScreen build ${_isDataFetched.value}');
     return Scaffold(
-      appBar: AppBar(title: Text('Quiz App')),
-      body: Column(
-        children: [
-          Text(
-            _quizData[_currentQuestionIndex].question ?? '',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          ElevatedButton(onPressed: () => _checkAnswer(_quizData[_currentQuestionIndex].a ?? ''), child: Text(_quizData[_currentQuestionIndex].a ?? '')),
-          ElevatedButton(onPressed: () => _checkAnswer(_quizData[_currentQuestionIndex].b ?? ''), child: Text(_quizData[_currentQuestionIndex].b ?? '')),
-          ElevatedButton(onPressed: () => _checkAnswer(_quizData[_currentQuestionIndex].c ?? ''), child: Text(_quizData[_currentQuestionIndex].c ?? '')),
-          ElevatedButton(onPressed: () => _checkAnswer(_quizData[_currentQuestionIndex].d ?? ''), child: Text(_quizData[_currentQuestionIndex].d ?? '')),
-          Text('Score: $_score'),
-        ],
-      ),
+      body: ValueListenableBuilder(
+          valueListenable: _isDataFetched,
+          builder: (context, value, child) => !value
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 15.0,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Container(
+                          child: Text(
+                            _quizData[_currentQuestionIndex].question ?? '',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: MediaQuery.of(context).size.width * .40,
+                            child: ElevatedButton(
+                              onPressed: () => _checkAnswer(
+                                _quizData[_currentQuestionIndex].a ?? '',
+                              ),
+                              child: Text(
+                                _quizData[_currentQuestionIndex].a ?? '',
+                                style: TextStyle(
+                                  fontSize: 25.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 20.0,
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width * .40,
+                            child: ElevatedButton(
+                              onPressed: () => _checkAnswer(
+                                _quizData[_currentQuestionIndex].b ?? '',
+                              ),
+                              child: Text(
+                                _quizData[_currentQuestionIndex].b ?? '',
+                                style: TextStyle(
+                                  fontSize: 50.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: MediaQuery.of(context).size.width * .40,
+                            child: ElevatedButton(
+                              onPressed: () => _checkAnswer(
+                                _quizData[_currentQuestionIndex].c ?? '',
+                              ),
+                              child: Text(
+                                _quizData[_currentQuestionIndex].c ?? '',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 20.0,
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width * .40,
+                            child: ElevatedButton(
+                              onPressed: () => _checkAnswer(
+                                _quizData[_currentQuestionIndex].d ?? '',
+                              ),
+                              child: Text(
+                                _quizData[_currentQuestionIndex].d ?? '',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 50.0,
+                      ),
+                      Text('Score: $_score'),
+                    ],
+                  ),
+              )),
     );
   }
 }

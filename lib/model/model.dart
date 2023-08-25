@@ -14,7 +14,7 @@ class questions {
     b = json['B'];
     c = json['C'];
     d = json['D'];
-    answer = json['answer'];
+    answer = json[json['answer']];
   }
 
   Map<String, dynamic> toJson() {

@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         theme: ThemeData(
           primaryColor: Colors.white,
+          scaffoldBackgroundColor: Color.fromRGBO(43, 43, 43, 1),
         ),
         debugShowCheckedModeBanner: false,
         title: 'Quiz App',
